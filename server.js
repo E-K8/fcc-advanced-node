@@ -2,8 +2,9 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
-const myDB = require('./connection');
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
+const myDB = require('./connection');
+const { ObjectID } = require('mongodb');
 
 const app = express();
 let pug = require('pug');
@@ -25,6 +26,23 @@ app.use(
 
 passport.initialize();
 passport.session();
+
+// Save user id to a cookie
+passport.serializeUser((user, done) => {
+  done(null, user._id);
+});
+
+// retrieve user details from cookie
+passport.deserializeUser((id, done) => {
+  myDB.findOne(
+    {
+      _id: new ObjectID(id),
+    },
+    (err, doc) => {
+      done(null, null);
+    }
+  );
+});
 
 app.set('view engine', 'pug');
 app.set('views', './views/pug');
