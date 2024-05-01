@@ -35,6 +35,15 @@ app.set('views', './views/pug');
 myDB(async (client) => {
   const myDataBase = await client.db('database').collection('users');
 
+  app.route('/').get((req, res) => {
+    res.render('index', {
+      title: 'Connected to Database',
+      message: 'Please log in',
+    });
+  });
+
+  // Serialization and deserialization ↓
+
   // Save user id to a cookie
   passport.serializeUser((user, done) => {
     done(null, user._id);
@@ -42,7 +51,7 @@ myDB(async (client) => {
 
   // retrieve user details from cookie
   passport.deserializeUser((id, done) => {
-    myDB.findOne(
+    myDataBase.findOne(
       {
         _id: new ObjectID(id),
       },
@@ -51,28 +60,13 @@ myDB(async (client) => {
       }
     );
   });
-
+}).catch((e) => {
   app.route('/').get((req, res) => {
-    req.session.count++;
-    console.log(req.session);
-    res.render('index', {
-      title: 'Connected to Database',
-      message: 'Please login',
-    });
+    res.render('index', { title: e, message: 'Unable to connect to database' });
   });
-})
-  .catch((e) => {
-    console.error(e);
-    app.route('/').get((req, res) => {
-      res.render('index', {
-        title: e,
-        message: 'Unable to connect to database',
-      });
-    });
-  })
-  .finally(() => {
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-      console.log('Listening on port ' + PORT);
-    });
-  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`);
+});
