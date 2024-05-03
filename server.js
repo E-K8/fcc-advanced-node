@@ -79,15 +79,16 @@ myDB(async (client) => {
     })
   );
 
+  // Setup POST for /login
   app.post(
     '/login',
-    express.urlencoded({ extended: false }),
     passport.authenticate('local', { failureRedirect: '/' }),
     (req, res) => {
       res.redirect('/profile');
     }
   );
 
+  // Setup GET for /profile
   app.get('/profile', (req, res) => {
     res.render('profile');
   });
