@@ -4,7 +4,7 @@ const express = require('express');
 const session = require('express-session');
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
 const myDB = require('./connection');
-const { ObjectID } = require('mongodb');
+const { ObjectId } = require('mongodb');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 
@@ -25,8 +25,8 @@ app.use(
   })
 );
 
-passport.initialize();
-passport.session();
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.set('view engine', 'pug');
 app.set('views', './views/pug');
@@ -34,7 +34,8 @@ app.set('views', './views/pug');
 // use myDB to connect to the database and start server
 
 myDB(async (client) => {
-  const myDataBase = await client.db('database').collection('users');
+  const myDataBase = await client.db('tricoder').collection('users');
+  console.log('Successful database connection');
 
   app.route('/').get((req, res) => {
     res.render('index', {
@@ -53,15 +54,32 @@ myDB(async (client) => {
 
   // retrieve user details from cookie
   passport.deserializeUser((id, done) => {
-    myDataBase.findOne(
-      {
-        _id: new ObjectID(id),
-      },
-      (err, doc) => {
-        done(null, doc);
-      }
-    );
+    console.log(`Deserializing user with ID: ${id}`);
+    myDataBase.findOne({ _id: new ObjectId(id) }, (err, doc) => {
+      console.log(`Found user: ${doc}`);
+      done(null, doc);
+    });
   });
+
+  // Setup POST for /login
+  app.post(
+    '/login',
+    (req, res, next) => {
+      console.log('Login route hit');
+      next();
+    },
+    passport.authenticate('local', { failureRedirect: '/' }),
+    (req, res) => {
+      console.log('Login successful');
+      res.redirect('/profile');
+    }
+  );
+
+  // Setup GET for /profile
+  app.get('/profile', (req, res) => {
+    res.render('profile');
+  });
+
   passport.use(
     new LocalStrategy((username, password, done) => {
       myDataBase.findOne(
@@ -78,21 +96,9 @@ myDB(async (client) => {
       );
     })
   );
-
-  // Setup POST for /login
-  app.post(
-    '/login',
-    passport.authenticate('local', { failureRedirect: '/' }),
-    (req, res) => {
-      res.redirect('/profile');
-    }
-  );
-
-  // Setup GET for /profile
-  app.get('/profile', (req, res) => {
-    res.render('profile');
-  });
 }).catch((e) => {
+  console.log('Unsuccessful database connection');
+
   app.route('/').get((req, res) => {
     res.render('index', { title: e, message: 'Unable to connect to database' });
   });
