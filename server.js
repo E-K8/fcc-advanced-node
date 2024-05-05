@@ -30,8 +30,14 @@ app.use(passport.session());
 app.set('view engine', 'pug');
 app.set('views', './views/pug');
 
-// use myDB to connect to the database and start server
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/');
+}
 
+// use myDB to connect to the database and start server
 myDB(async (client) => {
   const myDataBase = await client.db('tricoder').collection('users');
   console.log('Successful database connection');
@@ -59,7 +65,7 @@ myDB(async (client) => {
     });
   });
 
-  app.route('/logout').get((req, res) => {
+  app.get('/logout', (req, res) => {
     req.logout();
     res.redirect('/');
   });
@@ -105,13 +111,6 @@ myDB(async (client) => {
     res.render('index', { title: e, message: 'Unable to connect to database' });
   });
 });
-
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) {
-    return next();
-  }
-  res.redirect('/');
-}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
