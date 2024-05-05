@@ -9,7 +9,6 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 
 const app = express();
-let pug = require('pug');
 
 fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
@@ -45,46 +44,28 @@ myDB(async (client) => {
     });
   });
 
-  // Serialization and deserialization ↓
+  app
+    .route('/login')
+    .post(
+      passport.authenticate('local', { failureRedirect: '/' }),
+      (req, res) => {
+        res.redirect('/profile');
+      }
+    );
 
-  // Save user id to a cookie
-  passport.serializeUser((user, done) => {
-    done(null, user._id);
-  });
-
-  // retrieve user details from cookie
-  passport.deserializeUser((id, done) => {
-    console.log(`Deserializing user with ID: ${id}`);
-    myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
-      console.log(`Found user: ${doc}`);
-      done(null, doc);
+  app.route('/profile').get(ensureAuthenticated, (req, res) => {
+    res.render('profile', {
+      username: req.user.username,
     });
   });
 
-  // Setup POST for /login
-  app.post(
-    '/login',
-    (req, res, next) => {
-      console.log('Login route hit');
-      next();
-    },
-    passport.authenticate('local', { failureRedirect: '/' }),
-    (req, res) => {
-      console.log('Login successful');
-      res.redirect('/profile');
-    }
-  );
-
-  function ensureAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-      return next();
-    }
+  app.route('/logout').get((req, res) => {
+    req.logout();
     res.redirect('/');
-  }
+  });
 
-  // Setup GET for /profile
-  app.get('/profile', ensureAuthenticated, (req, res) => {
-    res.render('profile');
+  app.use((req, res, next) => {
+    res.status(404).type('text').send('Not Found');
   });
 
   passport.use(
@@ -103,19 +84,34 @@ myDB(async (client) => {
       );
     })
   );
+
+  // Serialization and deserialization ↓
+  // Save user id to a cookie
+  passport.serializeUser((user, done) => {
+    done(null, user._id);
+  });
+
+  // retrieve user details from cookie
+  passport.deserializeUser((id, done) => {
+    console.log(`Deserializing user with ID: ${id}`);
+    myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
+      console.log(`Found user: ${doc}`);
+      done(null, doc);
+    });
+  });
 }).catch((e) => {
   console.log('Unsuccessful database connection');
-
   app.route('/').get((req, res) => {
     res.render('index', { title: e, message: 'Unable to connect to database' });
   });
-
-  app.route('/profile').get(ensureAuthenticated, (req, res) => {
-    res.render('profile', {
-      username: req.user.username,
-    });
-  });
 });
+
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.redirect('/');
+}
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
