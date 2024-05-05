@@ -109,6 +109,12 @@ myDB(async (client) => {
   app.route('/').get((req, res) => {
     res.render('index', { title: e, message: 'Unable to connect to database' });
   });
+
+  app.route('/profile').get(ensureAuthenticated, (req, res) => {
+    res.render('profile', {
+      username: req.user.username,
+    });
+  });
 });
 
 const PORT = process.env.PORT || 3000;
