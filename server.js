@@ -4,7 +4,7 @@ const express = require('express');
 const session = require('express-session');
 const fccTesting = require('./freeCodeCamp/fcctesting.js');
 const myDB = require('./connection');
-const { ObjectId } = require('mongodb');
+const { ObjectID } = require('mongodb');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 
@@ -55,7 +55,7 @@ myDB(async (client) => {
   // retrieve user details from cookie
   passport.deserializeUser((id, done) => {
     console.log(`Deserializing user with ID: ${id}`);
-    myDataBase.findOne({ _id: new ObjectId(id) }, (err, doc) => {
+    myDataBase.findOne({ _id: new ObjectID(id) }, (err, doc) => {
       console.log(`Found user: ${doc}`);
       done(null, doc);
     });
@@ -75,8 +75,15 @@ myDB(async (client) => {
     }
   );
 
+  function ensureAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.redirect('/');
+  }
+
   // Setup GET for /profile
-  app.get('/profile', (req, res) => {
+  app.get('/profile', ensureAuthenticated, (req, res) => {
     res.render('profile');
   });
 
