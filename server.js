@@ -34,7 +34,6 @@ app.use(passport.session());
 myDB(async (client) => {
   const myDataBase = await client.db('tricoder').collection('users');
   console.log('Successful database connection');
-
   routes(app, myDataBase);
   auth(app, myDataBase);
 }).catch((e) => {

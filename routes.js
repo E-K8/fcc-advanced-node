@@ -8,6 +8,7 @@ module.exports = (app, myDataBase) => {
       message: 'Please log in',
       showLogin: true,
       showRegistration: true,
+      showSocialAuth: true,
     });
   });
 
@@ -15,6 +16,17 @@ module.exports = (app, myDataBase) => {
     .route('/login')
     .post(
       passport.authenticate('local', { failureRedirect: '/' }),
+      (req, res) => {
+        res.redirect('/profile');
+      }
+    );
+
+  app.route('/auth/github').get(passport.authenticate('github'));
+
+  app
+    .route('/auth/github/callback')
+    .get(
+      passport.authenticate('github', { failureRedirect: '/' }),
       (req, res) => {
         res.redirect('/profile');
       }
