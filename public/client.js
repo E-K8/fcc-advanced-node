@@ -1,4 +1,7 @@
 $(document).ready(function () {
+  /*global io*/
+  let socket = io('https://fcc-advanced-node.onrender.com');
+
   // Form submittion with new message in field with id 'm'
   $('form').submit(function () {
     var messageToSend = $('#m').val();

@@ -8,7 +8,12 @@ const passport = require('passport');
 const routes = require('./routes.js');
 const auth = require('./auth.js');
 
+// Initialize the Express application
 const app = express();
+
+// Create the HTTP server using the Express app
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 
 fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
@@ -34,8 +39,13 @@ app.use(passport.session());
 myDB(async (client) => {
   const myDataBase = await client.db('tricoder').collection('users');
   console.log('Successful database connection');
+
   routes(app, myDataBase);
   auth(app, myDataBase);
+
+  io.on('connection', (socket) => {
+    console.log('A user has connected');
+  });
 }).catch((e) => {
   console.log('Unsuccessful database connection');
   app.route('/').get((req, res) => {
@@ -44,6 +54,6 @@ myDB(async (client) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+http.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });
