@@ -12,7 +12,7 @@ $(document).ready(function () {
 
   socket.on('chat message', (data) => {
     console.log('socket.on 1');
-    $('message').append($('<li>').text(`${data.username}`));
+    $('messages').append($('<li>').text(`${data.username}`));
   });
 
   // Form submittion with new message in field with id 'm'
