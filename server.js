@@ -15,11 +15,14 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 const passportSocketIo = require('passport.socketio');
-const MongoStore = require('connect-mongo')(session);
+const MongoStore = require('connect-mongo');
 const cookieParser = require('cookie-parser');
 const { connect } = require('http2');
 const URI = process.env.MONGO_URI;
-const store = new MongoStore({ url: URI });
+const store = MongoStore.create({
+  mongoUrl: process.env.MONGO_URI,
+  collectionName: 'sessions',
+});
 
 fccTesting(app); //For FCC testing purposes
 app.use('/public', express.static(process.cwd() + '/public'));
