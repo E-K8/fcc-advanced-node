@@ -21,7 +21,8 @@
     "passport-local": "~1.0.0",
     "passport.socketio": "~3.7.0",
     "pug": ">=3.0.3",
-    "socket.io": "^4.7.5"
+    "socket.io": "^4.7.5",
+    "ws": "^8.18.0"
   },
   "keywords": [
     "node",
